@@ -1,0 +1,4 @@
+/* App-level overrides — layout handled inline in App.jsx */
+#root {
+  min-height: 100vh;
+}
