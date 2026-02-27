@@ -1,7 +1,7 @@
 {
   "name": "olivier",
   "private": true,
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "main": "electron/main.cjs",
   "description": "Olivier – Desktop lead manager with native notifications and system tray",

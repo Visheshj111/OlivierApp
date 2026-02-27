@@ -236,6 +236,7 @@ export default function App() {
   const [searchQ, setSearchQ] = useState("");
   const [isWide, setIsWide] = useState(window.innerWidth >= 900);
   const [appVersion, setAppVersion] = useState("");
+  const [autoStart, setAutoStart] = useState(true);
   const firedCalls = useRef(new Set());
 
   /* responsive */
@@ -271,6 +272,10 @@ export default function App() {
     // Load app version
     if (isElectron && window.electronAPI?.getAppVersion) {
       window.electronAPI.getAppVersion().then(v => setAppVersion(v)).catch(() => {});
+    }
+    // Load auto-start setting
+    if (isElectron && window.electronAPI?.getAutoStart) {
+      window.electronAPI.getAutoStart().then(enabled => setAutoStart(enabled)).catch(() => {});
     }
   }, []);
 
@@ -388,6 +393,13 @@ export default function App() {
 
   const changeStatus = (taskId, newStatus) => {
     save(tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
+  };
+
+  const toggleAutoStart = async (enabled) => {
+    if (isElectron && window.electronAPI?.setAutoStart) {
+      await window.electronAPI.setAutoStart(enabled);
+      setAutoStart(enabled);
+    }
   };
 
   /* filters + search */
@@ -577,21 +589,44 @@ export default function App() {
                 {!notifReady && <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#EF4444", marginLeft: "auto" }} />}
               </button>
               {notifMenuOpen && (
-                <div className="dropdown-menu anim" style={{ position: "absolute", bottom: 60, left: 16, width: 190 }} onClick={e => e.stopPropagation()}>
+                <div className="dropdown-menu anim" style={{ position: "absolute", bottom: 60, left: 16, width: 210 }} onClick={e => e.stopPropagation()}>
                   <div style={{ padding: "8px 12px", borderBottom: "1px solid #F1F5F9", marginBottom: 4 }}>
-                    <p style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>Notifications</p>
-                    <p style={{ fontSize: 11, color: notifReady ? "#15803D" : "#94A3B8", marginTop: 2, fontWeight: 500 }}>
-                      {notifReady ? "Currently enabled" : "Currently disabled"}
+                    <p style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>Settings</p>
+                  </div>
+                  <div style={{ padding: "6px 12px", marginBottom: 4 }}>
+                    <p style={{ fontSize: 11, fontWeight: 600, color: "#64748B", marginBottom: 4 }}>Notifications</p>
+                    <p style={{ fontSize: 11, color: notifReady ? "#15803D" : "#94A3B8", fontWeight: 500 }}>
+                      {notifReady ? "Enabled" : "Disabled"}
                     </p>
                   </div>
                   {notifReady ? (
                     <button className="dropdown-item" onClick={() => { setNotifReady(false); setNotifMenuOpen(false); }}>
-                      <BellOff size={13} /> Turn Off
+                      <BellOff size={13} /> Turn Off Notifications
                     </button>
                   ) : (
                     <button className="dropdown-item bold" onClick={() => { requestPermission(); setNotifMenuOpen(false); }}>
                       <Bell size={13} /> Enable Notifications
                     </button>
+                  )}
+                  <hr className="dropdown-divider" />
+                  {isElectron && (
+                    <>
+                      <div style={{ padding: "6px 12px", marginBottom: 4 }}>
+                        <p style={{ fontSize: 11, fontWeight: 600, color: "#64748B", marginBottom: 4 }}>Start on Boot</p>
+                        <p style={{ fontSize: 11, color: autoStart ? "#15803D" : "#94A3B8", fontWeight: 500 }}>
+                          {autoStart ? "Enabled" : "Disabled"}
+                        </p>
+                      </div>
+                      {autoStart ? (
+                        <button className="dropdown-item" onClick={() => { toggleAutoStart(false); setNotifMenuOpen(false); }}>
+                          <X size={13} /> Disable Auto-Start
+                        </button>
+                      ) : (
+                        <button className="dropdown-item bold" onClick={() => { toggleAutoStart(true); setNotifMenuOpen(false); }}>
+                          <CircleCheck size={13} /> Enable Auto-Start
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               )}

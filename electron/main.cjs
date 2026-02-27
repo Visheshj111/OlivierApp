@@ -123,6 +123,16 @@ ipcMain.handle("notification-supported", () => Notification.isSupported());
 ipcMain.handle("store-read", () => readStore());
 ipcMain.handle("store-write", (_event, data) => writeStore(data));
 
+// Auto-start on system startup
+ipcMain.handle("get-auto-start", () => {
+  return app.getLoginItemSettings().openAtLogin;
+});
+
+ipcMain.handle("set-auto-start", (_event, enabled) => {
+  app.setLoginItemSettings({ openAtLogin: enabled, openAsHidden: true });
+  return true;
+});
+
 // ── Single-instance lock: prevent duplicate app windows ──
 const gotTheLock = app.requestSingleInstanceLock();
 
@@ -142,6 +152,14 @@ if (!gotTheLock) {
 
 app.whenReady().then(() => {
   if (!gotTheLock) return; // safety: don't create window if we're quitting
+  
+  // Enable auto-start by default on first run
+  const loginSettings = app.getLoginItemSettings();
+  if (!loginSettings.wasOpenedAtLogin && loginSettings.openAtLogin === false) {
+    // First time - enable auto-start by default
+    app.setLoginItemSettings({ openAtLogin: true, openAsHidden: true });
+  }
+  
   createWindow();
   createTray();
 
