@@ -1,7 +1,7 @@
 const { app, BrowserWindow, Notification, ipcMain, Tray, Menu, nativeImage, dialog } = require("electron");
 const path = require("path");
 const fs = require("fs");
-const { autoUpdater } = require("electron-updater");
+let autoUpdater;
 
 // Set app name early so notifications show "Olivier" instead of "Electron"
 app.name = "Olivier";
@@ -165,6 +165,12 @@ app.whenReady().then(() => {
 
   // --- Auto-updater (only in production) ---
   if (!isDev) {
+    try {
+      autoUpdater = require("electron-updater").autoUpdater;
+    } catch (err) {
+      console.warn("Auto-updater unavailable:", err.message);
+      return;
+    }
     autoUpdater.autoDownload = true;
     autoUpdater.autoInstallOnAppQuit = true;
 

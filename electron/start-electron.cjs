@@ -27,9 +27,11 @@ waitForVite(VITE_URL, MAX_WAIT_MS)
   .then(() => {
     console.log("✅ Vite ready — launching Electron");
     const electronPath = require("electron");
+    const env = { ...process.env, ELECTRON_ENABLE_LOGGING: "1" };
+    delete env.ELECTRON_RUN_AS_NODE;
     const child = spawn(electronPath, ["."], {
       stdio: "inherit",
-      env: { ...process.env, ELECTRON_ENABLE_LOGGING: "1" },
+      env,
     });
     child.on("close", (code) => process.exit(code));
   })
