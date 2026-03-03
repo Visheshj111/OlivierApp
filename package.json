@@ -1,7 +1,7 @@
 {
   "name": "olivier",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.1.1",
   "type": "module",
   "main": "electron/main.cjs",
   "description": "Olivier – Desktop lead manager with native notifications and system tray",
@@ -13,6 +13,7 @@
     "preview": "vite preview",
     "electron:dev": "concurrently -k \"vite\" \"node electron/start-electron.cjs\"",
     "electron:build": "vite build && electron-builder --win",
+    "electron:publish": "vite build && electron-builder --win --publish always",
     "electron:pack": "vite build && electron-builder --dir"
   },
   "dependencies": {

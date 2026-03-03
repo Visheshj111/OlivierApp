@@ -95,7 +95,7 @@ export default function Leads({ expandedCard, setExpandedCard }) {
 
   /* ── Form Handlers ── */
   const handleSubmit = () => {
-    if (!form.name || !form.date) return;
+    if (!form.name) return;
     if (editId !== null) {
       updateLead(editId, {
         name: form.name, company: form.company, contact: form.contact, email: form.email,
@@ -184,6 +184,9 @@ export default function Leads({ expandedCard, setExpandedCard }) {
       nodes.push({ type: "followup", calledOn: fu.calledOn, deadline: fu.deadline, deadlineTime: fu.deadlineTime, remark: fu.remark, missed, label: `Follow-up #${i + 1}`, fuId: fu.id });
       prevDeadline = fu.deadline;
     });
+    if (t.status === "Closed") {
+      nodes.push({ type: "closed", calledOn: null, deadline: null, deadlineTime: null, remark: null, missed: false, label: "Lead Closed" });
+    }
     return nodes;
   };
 
@@ -237,8 +240,24 @@ export default function Leads({ expandedCard, setExpandedCard }) {
               {inp("calledOn", "", "date", { marginBottom: 0 })}
             </div>
             <div>
-              <span style={{ fontSize: 11, color: "var(--text-tertiary)", display: "block", marginBottom: 5, fontWeight: 500 }}>Call Back Date *</span>
-              {inp("date", "", "date", { marginBottom: 0 })}
+              <span style={{ fontSize: 11, color: "var(--text-tertiary)", display: "block", marginBottom: 5, fontWeight: 500 }}>Call Back Date</span>
+              <input
+                type="date"
+                value={form.date}
+                onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
+                disabled={form.status === "Closed"}
+                className="fi"
+                style={{ marginBottom: 0, opacity: form.status === "Closed" ? 0.4 : 1, cursor: form.status === "Closed" ? "not-allowed" : "auto", pointerEvents: form.status === "Closed" ? "none" : "auto" }}
+              />
+              <div
+                style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, cursor: "pointer", userSelect: "none" }}
+                onClick={() => setForm(f => ({ ...f, status: f.status === "Closed" ? "New" : "Closed" }))}
+              >
+                <div className={`checkbox${form.status === "Closed" ? " checked" : ""}`} style={{ width: 16, height: 16, flexShrink: 0 }}>
+                  {form.status === "Closed" && <Check size={10} color="#fff" />}
+                </div>
+                <span style={{ fontSize: 11, color: form.status === "Closed" ? "var(--text-primary)" : "var(--text-secondary)", fontWeight: 500 }}>Lead is closed — no callback needed</span>
+              </div>
             </div>
             <div>
               <span style={{ fontSize: 11, color: "var(--text-tertiary)", display: "block", marginBottom: 5, fontWeight: 500 }}>Call Back Time</span>
@@ -313,7 +332,7 @@ export default function Leads({ expandedCard, setExpandedCard }) {
             </div>
 
             <div style={{ gridColumn: "1 / -1", position: "sticky", bottom: 0, background: "var(--bg-primary)", paddingBottom: 4, zIndex: 2 }}>
-              <button className="btn-p" onClick={handleSubmit} disabled={!form.name || !form.date}
+              <button className="btn-p" onClick={handleSubmit} disabled={!form.name}
                 style={{ width: "100%", justifyContent: "center", padding: "11px 20px" }}>
                 <CircleCheck size={15} /> {editId ? "Update Lead" : "Save Lead"}
               </button>
@@ -538,24 +557,45 @@ export default function Leads({ expandedCard, setExpandedCard }) {
                       {isFuOpen && (
                         <div className="anim" style={{ marginTop: 12, background: "var(--bg-tertiary)", border: "1px solid var(--border-default)", borderRadius: 10, padding: 16 }}>
                           <p style={{ fontSize: 12, fontWeight: 700, marginBottom: 12, color: "var(--text-primary)" }}>New Follow-up</p>
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, alignItems: "start" }}>
                             <div>
                               <span style={{ fontSize: 11, color: "var(--text-tertiary)", display: "block", marginBottom: 4, fontWeight: 500 }}>Called On</span>
                               <input type="date" value={fuForm.calledOn} onChange={e => setFuForm(f => ({ ...f, calledOn: e.target.value }))} className="fi sm" />
                             </div>
                             <div>
-                              <span style={{ fontSize: 11, color: "var(--text-tertiary)", display: "block", marginBottom: 4, fontWeight: 500 }}>Call Back Date *</span>
-                              <input type="date" value={fuForm.deadline} onChange={e => setFuForm(f => ({ ...f, deadline: e.target.value }))} className="fi sm" />
+                              <span style={{ fontSize: 11, color: "var(--text-tertiary)", display: "block", marginBottom: 4, fontWeight: 500 }}>Call Back Date</span>
+                              <input
+                                type="date"
+                                value={fuForm.deadline}
+                                onChange={e => setFuForm(f => ({ ...f, deadline: e.target.value }))}
+                                disabled={fuForm.closed}
+                                className="fi sm"
+                                style={{ opacity: fuForm.closed ? 0.4 : 1, pointerEvents: fuForm.closed ? "none" : "auto" }}
+                              />
+                              <div
+                                style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 6, cursor: "pointer", userSelect: "none" }}
+                                onClick={() => setFuForm(f => ({ ...f, closed: !f.closed, deadline: !f.closed ? "" : f.deadline }))}
+                              >
+                                <div className={`checkbox${fuForm.closed ? " checked" : ""}`} style={{ width: 14, height: 14, flexShrink: 0 }}>
+                                  {fuForm.closed && <Check size={9} color="#fff" />}
+                                </div>
+                                <span style={{ fontSize: 10, color: fuForm.closed ? "var(--text-primary)" : "var(--text-secondary)", fontWeight: 500 }}>Lead is closed</span>
+                              </div>
                             </div>
                             <div>
                               <span style={{ fontSize: 11, color: "var(--text-tertiary)", display: "block", marginBottom: 4, fontWeight: 500 }}>Call Back Time</span>
-                              <input type="time" value={fuForm.deadlineTime} onChange={e => setFuForm(f => ({ ...f, deadlineTime: e.target.value }))} className="fi sm" />
+                              <input type="time" value={fuForm.deadlineTime} onChange={e => setFuForm(f => ({ ...f, deadlineTime: e.target.value }))} disabled={fuForm.closed} className="fi sm" style={{ opacity: fuForm.closed ? 0.4 : 1, pointerEvents: fuForm.closed ? "none" : "auto" }} />
                             </div>
                           </div>
                           <span style={{ fontSize: 11, color: "var(--text-tertiary)", display: "block", marginTop: 8, marginBottom: 4, fontWeight: 500 }}>Remark</span>
                           <textarea placeholder="What happened on this call?" value={fuForm.remark} onChange={e => setFuForm(f => ({ ...f, remark: e.target.value }))} rows={2} className="fi sm" style={{ marginBottom: 10 }} />
                           <div style={{ display: "flex", gap: 8 }}>
-                            <button className="btn-p xs" onClick={() => { addFollowUp(t.id, fuForm); setFuForm(EMPTY_FU); setFollowUpOpen(null); }} disabled={!fuForm.deadline}>
+                            <button className="btn-p xs" onClick={() => {
+                              addFollowUp(t.id, fuForm);
+                              if (fuForm.closed) changeStatus(t.id, "Closed");
+                              setFuForm(EMPTY_FU);
+                              setFollowUpOpen(null);
+                            }} disabled={!fuForm.deadline && !fuForm.closed}>
                               <CircleCheck size={12} /> Save
                             </button>
                             <button className="btn-o xs" onClick={() => setFollowUpOpen(null)}>Cancel</button>
@@ -573,14 +613,16 @@ export default function Leads({ expandedCard, setExpandedCard }) {
                           <div className="tl-line" />
                           {tl.map((n, i) => (
                             <div key={i} className="tl-node">
-                              <div className={`tl-dot${n.type === "created" ? " first" : ""}${n.missed ? " missed" : ""}`}>
+                              <div className={`tl-dot${n.type === "created" ? " first" : ""}${n.missed ? " missed" : ""}${n.type === "closed" ? " closed" : ""}`}>
                                 {n.type === "created" && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />}
                                 {n.missed && <AlertCircle size={8} color="#EF4444" />}
+                                {n.type === "closed" && <Check size={8} color="#71717a" />}
                               </div>
                               <div>
                                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>{n.label}</span>
+                                  <span style={{ fontSize: 13, fontWeight: 700, color: n.type === "closed" ? "#71717a" : "var(--text-primary)" }}>{n.label}</span>
                                   {n.missed && <span style={{ fontSize: 10, fontWeight: 700, color: "#EF4444", background: "#FEE2E2", padding: "1px 6px", borderRadius: 3, border: "1px solid #FECACA" }}>MISSED</span>}
+                                  {n.type === "closed" && <span style={{ fontSize: 10, fontWeight: 700, color: "#52525B", background: "#F4F4F5", padding: "1px 6px", borderRadius: 3, border: "1px solid #D4D4D8" }}>CLOSED</span>}
                                 </div>
                                 <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 3, display: "flex", flexWrap: "wrap", gap: 12 }}>
                                   {n.calledOn && <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Phone size={10} /> {fmtDateShort(n.calledOn)}</span>}

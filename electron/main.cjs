@@ -153,11 +153,13 @@ if (!gotTheLock) {
 app.whenReady().then(() => {
   if (!gotTheLock) return; // safety: don't create window if we're quitting
   
-  // Enable auto-start by default on first run
-  const loginSettings = app.getLoginItemSettings();
-  if (!loginSettings.wasOpenedAtLogin && loginSettings.openAtLogin === false) {
-    // First time - enable auto-start by default
-    app.setLoginItemSettings({ openAtLogin: true, openAsHidden: true });
+  // Enable auto-start by default on first run (only in production)
+  if (!isDev) {
+    const loginSettings = app.getLoginItemSettings();
+    if (!loginSettings.wasOpenedAtLogin && loginSettings.openAtLogin === false) {
+      // First time - enable auto-start by default
+      app.setLoginItemSettings({ openAtLogin: true, openAsHidden: true });
+    }
   }
   
   createWindow();

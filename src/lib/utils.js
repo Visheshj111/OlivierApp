@@ -102,7 +102,7 @@ export const EMPTY_FORM = {
   ctc: "", stipend: "", linkedIn: "",
   opportunityType: "", courses: [], role: ""
 };
-export const EMPTY_FU = { calledOn: "", deadline: "", deadlineTime: "", remark: "" };
+export const EMPTY_FU = { calledOn: "", deadline: "", deadlineTime: "", remark: "", closed: false };
 
 /* ── Default Templates ── */
 export const DEFAULT_TEMPLATES = [

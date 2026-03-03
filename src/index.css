@@ -222,6 +222,8 @@ button{cursor:pointer;font-family:var(--font);user-select:none;-webkit-user-sele
 .tl-dot.first{border-color:var(--accent);background:var(--accent)}
 .tl-dot.missed{border-color:var(--danger);background:var(--danger-bg)}
 .tl-dot.success{border-color:var(--success);background:var(--success-bg)}
+.tl-dot.closed{border-color:#71717a;background:#F4F4F5}
+[data-theme="dark"] .tl-dot.closed{border-color:#52525b;background:#27272a}
 
 /* ══════════════════════ KANBAN ══════════════════════ */
 .kanban-board{display:flex;gap:12px;overflow-x:auto;padding-bottom:16px;min-height:calc(100vh - 200px)}
