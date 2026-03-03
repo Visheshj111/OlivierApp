@@ -178,28 +178,30 @@ app.whenReady().then(() => {
 
     autoUpdater.on("update-available", (info) => {
       console.log("Update available:", info.version);
+      if (mainWindow) mainWindow.webContents.send("update-available", info.version);
+    });
+
+    autoUpdater.on("download-progress", (progress) => {
+      if (mainWindow) mainWindow.webContents.send("update-progress", Math.round(progress.percent));
     });
 
     autoUpdater.on("update-downloaded", (info) => {
-      dialog.showMessageBox(mainWindow, {
-        type: "info",
-        title: "Update Ready",
-        message: `Olivier v${info.version} has been downloaded.`,
-        detail: "The update will be installed when you restart the app.",
-        buttons: ["Restart Now", "Later"],
-      }).then((result) => {
-        if (result.response === 0) {
-          autoUpdater.quitAndInstall();
-        }
-      });
+      if (mainWindow) mainWindow.webContents.send("update-downloaded", info.version);
     });
 
     autoUpdater.on("error", (err) => {
       console.warn("Auto-update error (non-fatal):", err.message);
     });
 
-    // Check for updates
-    autoUpdater.checkForUpdatesAndNotify().catch(() => {});
+    // IPC: renderer requests install
+    ipcMain.handle("install-update", () => {
+      autoUpdater.quitAndInstall();
+    });
+
+    // Check for updates after a short delay (let app fully load first)
+    setTimeout(() => {
+      autoUpdater.checkForUpdatesAndNotify().catch(() => {});
+    }, 5000);
   }
 });
 

@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Users, Kanban, BarChart3, CalendarCheck,
   Table2, FileText, Bell, BellOff, Settings,
   Search, X, ChevronRight, Zap,
-  Power, Menu, Moon, Sun, Clock, Plus, Trash2, Info
+  Power, Menu, Moon, Sun, Clock, Plus, Trash2, Info, CircleCheck
 } from "lucide-react";
 import { useApp } from "./context/AppContext";
 import { LogoIcon } from "./components/Shared";
@@ -47,6 +47,7 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [newCustomStatus, setNewCustomStatus] = useState("");
   const [customStatuses, setCustomStatuses] = useState(getCustomStatuses());
+  const [updateInfo, setUpdateInfo] = useState(null); // null | { version, state: 'available'|'downloading'|'ready', progress? }
   const cmdRef = useRef(null);
 
   /* -- Navigate helper -- */
@@ -87,6 +88,20 @@ export default function App() {
   useEffect(() => {
     if (showCmdPalette && cmdRef.current) cmdRef.current.focus();
   }, [showCmdPalette]);
+
+  /* -- Auto-update listeners (Electron only) -- */
+  useEffect(() => {
+    if (!window.electronAPI) return;
+    window.electronAPI.onUpdateAvailable?.((v) =>
+      setUpdateInfo({ version: v, state: "downloading", progress: 0 })
+    );
+    window.electronAPI.onUpdateProgress?.((pct) =>
+      setUpdateInfo(prev => prev ? { ...prev, progress: pct } : prev)
+    );
+    window.electronAPI.onUpdateDownloaded?.((v) =>
+      setUpdateInfo({ version: v, state: "ready" })
+    );
+  }, []);
 
   /* -- Command palette items -- */
   const cmdItems = [
@@ -205,6 +220,46 @@ export default function App() {
             {notifReady ? <Bell size={16} /> : <BellOff size={16} />}
           </button>
         </header>
+
+        {/* ── Update Banner ── */}
+        {updateInfo && (
+          <div style={{
+            display: "flex", alignItems: "center", gap: 12,
+            padding: "10px 24px",
+            background: updateInfo.state === "ready" ? "#052e16" : "#172554",
+            borderBottom: "1px solid " + (updateInfo.state === "ready" ? "#166534" : "#1e40af"),
+            animation: "slideDown .3s ease",
+          }}>
+            <div style={{ fontSize: 13, color: "#fff", flex: 1, display: "flex", alignItems: "center", gap: 8 }}>
+              {updateInfo.state === "ready" ? (
+                <><CircleCheck size={15} color="#4ade80" />
+                  <span><strong>Olivier v{updateInfo.version}</strong> is ready to install</span>
+                </>
+              ) : (
+                <><Clock size={15} color="#60a5fa" />
+                  <span>Downloading update v{updateInfo.version}…{updateInfo.progress > 0 ? ` (${updateInfo.progress}%)` : ""}</span>
+                  {updateInfo.progress > 0 && (
+                    <div style={{ width: 100, height: 4, background: "rgba(255,255,255,.2)", borderRadius: 9999, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${updateInfo.progress}%`, background: "#60a5fa", borderRadius: 9999, transition: "width .3s" }} />
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+            {updateInfo.state === "ready" && (
+              <button
+                onClick={() => window.electronAPI?.installUpdate?.()}
+                style={{ padding: "6px 16px", borderRadius: 8, background: "#16a34a", color: "#fff", border: "none", fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "var(--font)" }}
+              >
+                Restart & Install
+              </button>
+            )}
+            <button onClick={() => setUpdateInfo(null)}
+              style={{ background: "none", border: "none", color: "rgba(255,255,255,.5)", cursor: "pointer", padding: 4, display: "flex", alignItems: "center" }}>
+              <X size={14} />
+            </button>
+          </div>
+        )}
 
         {/* Page Content */}
         <main style={{ flex: 1, padding: 24, overflowY: "auto" }}>
